@@ -3,24 +3,37 @@ import os
 import re
 import sys
 
-try:
-   scriptname, source, find, replace = argv
-except:
-    print( """Invalid arguments passed. Usage:\n scriptname.py source-path find-argument replace-argument""")
-    sys.exit()
 
-textfiles = []
-for root, dirnames, filenames in os.walk(args.source):
-    for filename in filter(lambda s: s.endswith(".txt"), filenames):
-        textfiles.append(os.path.join(root, filename))
+def generate_file_list(source, filetype=".txt"):
+    files = []
+    for root, dirnames, filenames in os.walk(source):
+        for filename in filter(lambda s: s.endswith(filetype), filenames):
+            files.append(os.path.join(root, filename))
+    return files
 
-args.find, args.replace = map(re.escape, [args.find, args.replace])
-for textfile in textfiles:
-    with open(textfile, 'r') as f:
-        content, count = re.subn(args.find, args.replace, f.read())
 
-    with open(textfile, 'w') as f:
-        f.write(content)
+def find_replace(files, find, replace):
+    count = 0
+    find, replace = map(re.escape, [find, replace])
+    for textfile in files:
+        with open(textfile, 'r') as f:
+           content, count = re.subn(find, replace, f.read())
+        with open(textfile, 'w') as f:
+            f.write(content)
+    return count
 
-print "Replaced {} occurences of {} in {}".format(
-    str(count), args.find, args.source)
+
+def main():
+    try:
+        scriptname, source, filetype, find, replace = sys.argv
+    except Exception as e:
+        print "Invalid arguments passed. Usage:\n\t txtReplace.py <source-path> <file-type> <find-argument> <replace-argument>"
+        sys.exit()
+    
+    fileList = generate_file_list(source, filetype)
+    print fileList
+    changeCount = find_replace(fileList, find, replace)
+    print "Replaced %s occurences of %s in %s" % (str(changeCount), find, source)
+
+if __name__ == "__main__":
+    main()
